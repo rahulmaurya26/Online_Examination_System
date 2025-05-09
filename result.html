@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Results</title>
+  <link rel="icon" type="image/png" href="favicon-32x32.png">
+
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+    crossorigin="anonymous" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.21/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    body {
+      background: #f5f7fa;
+    }
+
+    .form-box {
+      max-width: 500px;
+      margin: 100px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      animation: slideUp 1s ease;
+      position: relative;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    #resultsContainer {
+      margin-top: 30px;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .close-icon {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      cursor: pointer;
+    }
+
+    .table-responsive {
+      animation: fadeIn 1s ease;
+    }
+
+    #pdf {
+      position: fixed;
+      top: 50px;
+      right: 30px;
+      z-index: 1000;
+      
+      
+    }
+  </style>
+</head>
+
+<body>
+  
+  <div class="form-box" id="tex">
+    <i class="fas fa-times fa-lg text-danger close-icon" onclick="closeOpenedWindow()"></i>
+    <h4 class="mb-4">Enter Roll Number
+      <a href="user_information.php" class="btn btn-sm btn-outline-secondary ml-2">
+        <i class="fas fa-question-circle"></i>
+      </a>
+    </h4>
+    <form>
+      <div class="form-group">
+        <input type="text" name="Roll_Number" minlength="12" maxlength="12" class="form-control"
+        placeholder="12-digit Roll Number" onkeypress="return isNumberKey(event)" oninput="validateInput()"/>
+      </div>
+      <button type="button" id="get" class="btn btn-primary btn-block" onclick="showResults()" disabled>
+        Get Result
+      </button>
+    </form>
+  </div>
+  
+  <div id="qu" class="text-center hidden mt-4" style="display: none;">
+    <h2>Quiz Results</h2>
+  </div>
+  <i id="closeAfterResult" class="fas fa-times fa-lg text-danger close-icon" style="display: none;"onclick="closeOpenedWindow()"></i>
+
+  <button onclick="generatePDF()" id="pdf" class="hidden btn btn-success" style="display: none;">
+    <i class="fas fa-file-download"></i> Download PDF
+  </button>
+
+  <div id="resultsContainer" class="container mt-4"></div>
+
+  <script>
+    function isNumberKey(evt) {
+      var charCode = evt.which ? evt.which : evt.keyCode;
+      return !(charCode < 48 || charCode > 57);
+    }
+
+    function validateInput() {
+      let rollNumber = document.querySelector("input[name='Roll_Number']").value;
+      document.getElementById("get").disabled = rollNumber.length !== 12;
+    }
+
+    let resultsData = [];
+
+    function showResults() {
+      document.getElementById('tex').style.display = "none";
+      document.getElementById('pdf').style.display = "block";
+      document.getElementById('qu').style.display = "block";
+      document.getElementById('closeAfterResult').style.display = "block";
+
+
+      let rollNumber = document.querySelector("input[name='Roll_Number']").value;
+
+      fetch("view_result.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "Roll_Number=" + encodeURIComponent(rollNumber)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            alert(data.message);
+            window.location.href = "subjectchoose.php";
+            return;
+          }
+
+          let resultsContainer = document.getElementById("resultsContainer");
+          resultsContainer.innerHTML = `<h4>Results for <strong>${data.results[0].student_name}</strong></h4>`;
+
+          let resultHTML = `
+          <div class="table-responsive mt-3">
+            <table class="table table-bordered table-striped">
+              <thead class="thead-dark">
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Subject</th>
+                  <th>Total Qs</th>
+                  <th>Attempted</th>
+                  <th>Correct</th>
+                  <th>Wrong</th>
+                  <th>%</th>
+                  <th>Score</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>`;
+
+          resultsData = [];
+          data.results.forEach((result, index) => {
+            resultHTML += `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${result.student_name}</td>
+                  <td>${result.subject_name}</td>
+                  <td>${result.total_questions}</td>
+                  <td>${result.attempted}</td>
+                  <td>${result.correct}</td>
+                  <td>${result.wrong}</td>
+                  <td>${result.percentage}%</td>
+                  <td>${result.total_score}</td>
+                  <td>${result.quiz_date}</td>
+                  <td>${result.quiz_time}</td>
+                </tr>`;
+            resultsData.push([
+              index + 1,
+              result.student_name,
+              result.subject_name,
+              result.total_questions,
+              result.attempted,
+              result.correct,
+              result.wrong,
+              result.percentage + "%",
+              result.total_score,
+              result.quiz_date,
+              result.quiz_time
+            ]);
+          });
+
+          resultHTML += `
+              </tbody>
+            </table>
+          </div>`;
+
+          resultsContainer.innerHTML += resultHTML;
+        })
+        .catch(error => console.error("Error:", error));
+    }
+
+    function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(10);
+      doc.text("Quiz Results", 14, 15);
+      doc.autoTable({
+        startY: 25,
+        head: [["Test", "Name", "Subject", "Total Qs", "Attempted", "Correct", "Wrong", "Percentage", "Score", "Date", "Time"]],
+        body: resultsData
+      });
+
+      const studentName = resultsData[0] ? resultsData[0][1].replace(/\s+/g, '_') : "quiz_results";
+      doc.save(`${studentName}.pdf`);
+    }
+
+    function closeOpenedWindow() {
+      window.close();
+    }
+  </script>
+</body>
+
+</html>

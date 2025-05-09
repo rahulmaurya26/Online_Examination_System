@@ -1,0 +1,34 @@
+{
+    "candidates": [
+        {
+            "content": {
+                "parts": [
+                    {
+                        "text": "```python\ndef add_two_numbers(num1, num2):\n    \"\"\"Adds two numbers and returns the sum.\n\n    Args:\n        num1: The first number.\n        num2: The second number.\n\n    Returns:\n        The sum of num1 and num2.\n    \"\"\"\n    return num1 + num2\n\n\n# Get input from the user  (optional - you can hardcode values if you prefer)\ntry:\n    number1 = float(input(\"Enter the first number: \"))\n    number2 = float(input(\"Enter the second number: \"))\n\n    sum_result = add_two_numbers(number1, number2)\n    print(\"The sum is:\", sum_result)\n\nexcept ValueError:\n    print(\"Invalid input. Please enter numbers only.\")\n\n\n\n# Example usage with hardcoded values:\n# a = 10\n# b = 5\n# result = add_two_numbers(a, b)\n# print(result)  # Output: 15\n\n\n```\n\n\nThis improved version includes:\n\n* **A function:**  Encapsulates the addition logic for better organization and reusability.\n* **Docstrings:** Explains what the function does, making the code more readable and understandable.\n* **Error handling:** Uses a `try-except` block to handle potential `ValueError` exceptions if the user enters non-numeric input.\n* **Clearer prompts and output:**  Provides more user-friendly messages.\n* **Optional user input\/hardcoded values:** Demonstrates how to both take input from the user and use hardcoded values for testing.  Comment out the input section if you just want to test with specific numbers.\n* **Type flexibility:** Uses `float()` in the input to allow the user to enter decimal numbers as well. If you only want integers, you can use `int()`."
+                    }
+                ],
+                "role": "model"
+            },
+            "finishReason": "STOP",
+            "avgLogprobs": -0.14334238052368165
+        }
+    ],
+    "usageMetadata": {
+        "promptTokenCount": 7,
+        "candidatesTokenCount": 400,
+        "totalTokenCount": 407,
+        "promptTokensDetails": [
+            {
+                "modality": "TEXT",
+                "tokenCount": 7
+            }
+        ],
+        "candidatesTokensDetails": [
+            {
+                "modality": "TEXT",
+                "tokenCount": 400
+            }
+        ]
+    },
+    "modelVersion": "gemini-1.5-pro-002"
+}
